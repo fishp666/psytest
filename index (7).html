@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fishp Server - 精品 Minecraft 服务器</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Minecraft:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Minecraft', Arial, sans-serif;
+            background: linear-gradient(135deg, #2c5530, #1a3d1f);
+            background-attachment: fixed;
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 通用样式 */
+        header {
+            text-align: center;
+            padding: 40px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 3px solid #4CAF50;
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.3);
+        }
+        
+        .server-title {
+            font-size: 3rem;
+            color: #4CAF50;
+            text-shadow: 3px 3px 0px #2E7D32;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+        
+        .server-subtitle {
+            font-size: 1.3rem;
+            color: #81C784;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .server-description {
+            font-size: 1.1rem;
+            color: #C8E6C9;
+            margin: 15px auto;
+            max-width: 800px;
+            line-height: 1.6;
+        }
+        
+        .server-address {
+            font-size: 1.5rem;
+            background: rgba(76, 175, 80, 0.2);
+            padding: 15px 30px;
+            border-radius: 25px;
+            border: 2px solid #4CAF50;
+            display: inline-block;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: all;
+            position: relative;
+        }
+        
+        .server-address:hover {
+            background: rgba(76, 175, 80, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .copy-tooltip {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .copy-tooltip.show {
+            opacity: 1;
+        }
+        
+        .copy-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: rgba(76, 175, 80, 0.9);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .panel {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.2);
+        }
+        
+        .panel h2 {
+            color: #4CAF50;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 2px 2px 0px #2E7D32;
+        }
+        
+        /* 图表容器样式 */
+        .chart-container {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+        
+        .chart-container h3 {
+            color: #4CAF50;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 2px 2px 0px #2E7D32;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .status-item {
+            background: rgba(76, 175, 80, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #4CAF50;
+        }
+        
+        .status-label {
+            font-size: 0.9rem;
+            color: #81C784;
+            margin-bottom: 5px;
+        }
+        
+        .status-value {
+            font-size: 1.5rem;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .detailed-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .detail-item {
+            background: rgba(33, 150, 243, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #2196F3;
+            text-align: center;
+        }
+        
+        .detail-label {
+            font-size: 0.8rem;
+            color: #81C784;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .detail-value {
+            font-size: 1.1rem;
+            color: #2196F3;
+            font-weight: bold;
+            word-break: break-all;
+        }
+        
+        /* 状态颜色样式 */
+        .loading { color: #FFC107; }
+        .online { color: #4CAF50; }
+        .offline { color: #F44336; }
+        .warning { color: #FF9800; }
+        .excellent { color: #4CAF50; }
+        .good { color: #8BC34A; }
+        .fair { color: #FFC107; }
+        .poor { color: #FF9800; }
+        .terrible { color: #F44336; }
+        
+        .refresh-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            margin: 5px;
+            transition: background 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #45a049;
+        }
+        
+        .refresh-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .player-list {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .player-item {
+            background: rgba(76, 175, 80, 0.1);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .player-item:hover {
+            background: rgba(76, 175, 80, 0.2);
+            transform: translateX(5px);
+        }
+        
+        .player-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            border: 2px solid #4CAF50;
+            background: #2E7D32;
+            flex-shrink: 0;
+        }
+        
+        .player-info {
+            flex-grow: 1;
+        }
+        
+        .player-name {
+            font-size: 1.1rem;
+            color: #4CAF50;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .player-uuid {
+            font-size: 0.8rem;
+            color: #81C784;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+        
+        .connection-info {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid #2196F3;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #81C784;
+        }
+        
+        .connection-info h5 {
+            color: #2196F3;
+            margin-bottom: 8px;
+        }
+        
+        .ping-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .ping-method {
+            background: rgba(76, 175, 80, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            text-align: center;
+        }
+        
+        /* 特色模组和资源包样式 */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .feature-item {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-item:hover {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: #4CAF50;
+            transform: translateY(-3px);
+        }
+        
+        .feature-name {
+            font-size: 1.2rem;
+            color: #4CAF50;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feature-description {
+            color: #A5D6A7;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .feature-tag {
+            display: inline-block;
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+        }
+        
+        /* Minecraft 格式化代码支持 */
+        @keyframes minecraft-obfuscated {
+            0% { opacity: 1; }
+            25% { opacity: 0.3; }
+            50% { opacity: 0.1; }
+            75% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .minecraft-obfuscated {
+            animation: minecraft-obfuscated 0.15s infinite;
+        }
+        
+        /* MOTD 显示区域优化 */
+        #motd {
+            line-height: 1.8;
+            font-family: 'Minecraft', 'Courier New', monospace;
+            text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
+            font-size: 1rem;
+        }
+        
+        #motd span {
+            text-shadow: inherit;
+        }
+        
+        .feature-highlight {
+            background: linear-gradient(45deg, rgba(76, 175, 80, 0.2), rgba(129, 199, 132, 0.1));
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-highlight h4 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .feature-highlight p {
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+        
+        .rules-highlight {
+            background: linear-gradient(45deg, rgba(255, 193, 7, 0.2), rgba(255, 235, 59, 0.1));
+            border: 2px solid #FFC107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .rules-highlight h4 {
+            color: #FFC107;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .rules-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .rules-list li {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.5;
+        }
+        
+        .rules-list li::before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+            color: #FFC107;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content, .charts-grid, .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .server-title {
+                font-size: 2rem;
+            }
+            
+            .status-grid, .detailed-info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .player-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .ping-methods {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #81C784;
+            border-top: 2px solid #4CAF50;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="server-title">🌟 Fishp Server</h1>
+            <p class="server-subtitle">精品 Minecraft 多人游戏服务器</p>
+            <p class="server-description">
+                基于 Fabric 1.21.1 + Fabric Loader 0.16.14 构建，汇聚了精选模组的完整游戏体验。
+                我们致力于为玩家提供稳定、丰富、创新的 Minecraft 世界，
+                融合科技工业、探索冒险、美食烹饪、视觉优化等多个维度的游戏内容。
+            </p>
+            <div class="server-address" onclick="copyServerAddress()" title="点击复制服务器地址">
+                🌐 fishp.9666.fun:14522
+                <div class="copy-tooltip" id="copyTooltip">点击复制地址</div>
+            </div>
+        </header>
+
+        <!-- 服务器状态图表 -->
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3>📊 服务器延迟监控</h3>
+                <div class="chart-wrapper">
+                    <canvas id="pingChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>👥 玩家在线趋势</h3>
+                <div class="chart-wrapper">
+                    <canvas id="playerChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 服务器状态和玩家列表 -->
+        <div class="main-content">
+            <div class="panel">
+                <h2>🔍 服务器实时状态</h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-label">服务器状态</div>
+                        <div class="status-value" id="server-status">检查中...</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">在线玩家</div>
+                        <div class="status-value" id="player-count">--/--</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">网络延迟</div>
+                        <div class="status-value" id="ping">-- ms</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">游戏版本</div>
+                        <div class="status-value" id="version">Fabric 1.21.1</div>
+                    </div>
+                </div>
+                
+                <div class="detailed-info-grid" id="detailed-info" style="display: none;">
+                    <div class="detail-item">
+                        <div class="detail-label">协议版本</div>
+                        <div class="detail-value" id="protocol-version">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">服务器软件</div>
+                        <div class="detail-value" id="server-software">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">最大玩家数</div>
+                        <div class="detail-value" id="max-players">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">服务器图标</div>
+                        <div class="detail-value" id="server-icon">🎮</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">上次更新</div>
+                        <div class="detail-value" id="last-update">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">运行时间</div>
+                        <div class="detail-value" id="uptime">--</div>
+                    </div>
+                </div>
+                
+                <div id="motd" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">正在获取服务器信息...</div>
+                
+                <div class="connection-info">
+                    <h5>🌐 网络连接状态</h5>
+                    <div id="connection-details">正在检测服务器连通性...</div>
+                    <div class="ping-methods" id="ping-methods" style="display: none;">
+                        <div class="ping-method">
+                            <div style="font-size: 0.8rem; color: #81C784;">API延迟</div>
+                            <div id="main-ping">--ms</div>
+                        </div>
+                        <div class="ping-method">
+                            <div style="font-size: 0.8rem; color: #81C784;">连接质量</div>
+                            <div id="connection-quality">--</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="refresh-btn" onclick="checkServerStatus()" id="refreshButton">🔄 刷新状态</button>
+                <button class="refresh-btn" onclick="toggleDetailedInfo()" id="detailButton" style="background: #2196F3;">📊 详细信息</button>
+            </div>
+
+            <div class="panel">
+                <h2>👥 在线玩家列表</h2>
+                <div id="player-list" class="player-list">
+                    <div style="text-align: center; color: #81C784; padding: 20px;">
+                        🔄 正在获取玩家信息...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 精选模组展示 -->
+        <div class="panel">
+            <h2>🚀 核心特色模组</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-name">🚀 钠 (Sodium)</div>
+                    <div class="feature-description">革命性的渲染优化模组，相比原版可提升300%以上的帧率，大幅改善游戏性能。</div>
+                    <span class="feature-tag">性能优化</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-name">🔍 REI 物品管理器</div>
+                    <div class="feature-description">强大的物品搜索和配方查看系统，支持模组物品的合成配方查询。</div>
+                    <span class="feature-tag">界面增强</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-name">🏭 科技复兴</div>
+                    <div class="feature-description">完整的现代工业科技体系，从简单的发电机到复杂的核反应堆。</div>
+                    <span class="feature-tag">科技工业</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-name">🎤 简单语音聊天</div>
+                    <div class="feature-description">高质量的3D语音通讯系统，支持距离衰减、音量控制和频道功能。</div>
+                    <span class="feature-tag">社交通讯</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-name">👨‍🍳 农夫乐事：重织</div>
+                    <div class="feature-description">核心烹饪系统，新增各种厨具和烹饪机制，让食物制作更有趣。</div>
+                    <span class="feature-tag">美食烹饪</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-name">⌨️ 游戏内输入法</div>
+                    <div class="feature-description">增强版中文输入法支持，完美兼容各种输入法，支持候选词显示。</div>
+                    <span class="feature-tag">中文化</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 精选资源包展示 -->
+        <div class="panel">
+            <h2>🎨 精选资源包</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-name">⛏️ 矿物发光</div>
+                    <div class="feature-description">为所有矿物添加发光边框效果，让矿物在黑暗中更容易被发现。支持原版和模组矿物。</div>
+                    <span class="feature-tag">功能增强</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-name">💎 Faithful 64x</div>
+                    <div class="feature-description">高清原版风格资源包，将原版16x16纹理提升到64x64分辨率，保持原版美术风格。</div>
+                    <span class="feature-tag">视觉美化</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-name">🌙 原版深色模式Ⅲ</div>
+                    <div class="feature-description">护眼的深色主题界面，重新设计所有GUI界面为深色配色方案，减少眼部疲劳。</div>
+                    <span class="feature-tag">界面优化</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-name">🎬 宣传片风格</div>
+                    <div class="feature-description">简约现代设计风格，模仿游戏宣传片的美术风格，适合建筑和摄影。</div>
+                    <span class="feature-tag">特色风格</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 服务器规则 -->
+        <div class="main-content">
+            <div class="panel">
+                <h2>📋 服务器规则与要求</h2>
+                <div class="rules-highlight">
+                    <h4>⚖️ 基本规则</h4>
+                    <ul class="rules-list">
+                        <li><strong>正版验证</strong> - 服务器启用正版验证，仅允许正版 Minecraft 玩家进入</li>
+                        <li><strong>禁止作弊</strong> - 严禁使用任何形式的作弊工具、外挂或恶意模组</li>
+                        <li><strong>维护平衡</strong> - 禁止恶意破坏游戏平衡，包括但不限于刷物品、卡BUG等行为</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🤝 社区规范</h2>
+                <div class="rules-highlight">
+                    <h4>👥 行为准则</h4>
+                    <ul class="rules-list">
+                        <li><strong>尊重他人</strong> - 尊重其他玩家的游戏体验，禁止恶意破坏、偷窃或骚扰</li>
+                        <li><strong>文明交流</strong> - 聊天内容应文明友善，禁止发布不当言论或广告内容</li>
+                        <li><strong>遵守法律</strong> - 严禁在服务器内进行任何违法违规活动</li>
+                    </ul>
+                </div>
+                <p style="color: #FFE082; font-style: italic; margin-top: 15px;">
+                    违反规则将根据情节严重程度给予警告、临时封禁或永久封禁处理。
+                </p>
+            </div>
+        </div>
+
+        <!-- 服务器介绍 -->
+        <div class="main-content">
+            <div class="panel">
+                <h2>🎮 选择我们的理由</h2>
+                <div class="feature-highlight">
+                    <h4>🔧 精心优化的性能</h4>
+                    <p>采用 Sodium 渲染引擎和多项性能优化模组，确保流畅的游戏体验。即使在大型建筑群和复杂工业区域也能保持稳定帧率。</p>
+                </div>
+                <div class="feature-highlight">
+                    <h4>🌍 丰富的内容体验</h4>
+                    <p>从科技工业到魔法探索，从美食烹饪到建筑装饰，精选模组为你打造一个内容丰富、永远不会无聊的 Minecraft 世界。</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🌟 服务器特色</h2>
+                <div class="feature-highlight">
+                    <h4>👥 友好的社区环境</h4>
+                    <p>内置语音聊天系统，支持中文优化，完善的用户界面设计，让新老玩家都能快速融入游戏，享受多人协作的乐趣。</p>
+                </div>
+                <div class="feature-highlight">
+                    <h4>🎨 视觉盛宴</h4>
+                    <p>预装多套精美资源包，从清新自然到科幻未来，从简约现代到怀旧经典，总有一款符合你的审美品味。</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>🎮 Fishp Server - 打造属于你的完美 Minecraft 世界</p>
+            <p>⚡ 基于 Fabric 1.21.1 + Fabric Loader 0.16.14 • 🌟 精选模组体验 • 🎨 多套主题资源包</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">持续更新优化 | 稳定运行保障 | 社区友好环境 | 正版验证保护</p>
+        </footer>
+    </div>
+
+    <script>
+        // 全局变量
+        let pingChart, playerChart;
+        let pingHistory = [];
+        let playerHistory = [];
+        
+        // 服务器配置
+        const SERVER_CONFIG = {
+            host: 'fishp.9666.fun',
+            port: 14522,
+            fullAddress: 'fishp.9666.fun:14522'
+        };
+
+        // 更新的API端点配置
+        const API_ENDPOINT = 'https://list.mczfw.cn/api/fishp.9666.fun:14522';
+
+        let detailsVisible = false;
+
+        // 延迟等级评估
+        function getPingQuality(ping) {
+            if (ping < 50) return { level: 'excellent', text: '极佳', color: '#4CAF50' };
+            if (ping < 100) return { level: 'good', text: '良好', color: '#8BC34A' };
+            if (ping < 200) return { level: 'fair', text: '一般', color: '#FFC107' };
+            if (ping < 300) return { level: 'poor', text: '较差', color: '#FF9800' };
+            return { level: 'terrible', text: '很差', color: '#F44336' };
+        }
+
+        // Minecraft 格式化代码解析函数
+        function parseMinecraftFormatting(text) {
+            if (!text) return '';
+            
+            const colorCodes = {
+                '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
+                '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#AAAAAA',
+                '8': '#555555', '9': '#5555FF', 'a': '#55FF55', 'b': '#55FFFF',
+                'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
+            };
+            
+            let result = '';
+            let currentColor = '#FFFFFF';
+            
+            text = text.replace(/§/g, '&');
+            const parts = text.split('&');
+            result += escapeHtml(parts[0]);
+            
+            for (let i = 1; i < parts.length; i++) {
+                if (parts[i].length === 0) continue;
+                
+                const code = parts[i][0].toLowerCase();
+                const content = escapeHtml(parts[i].substring(1));
+                
+                if (colorCodes[code]) {
+                    currentColor = colorCodes[code];
+                    if (content) {
+                        result += `<span style="color: ${currentColor};">${content}</span>`;
+                    }
+                } else {
+                    result += '&' + parts[i];
+                }
+            }
+            
+            return result;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 切换详细信息显示
+        function toggleDetailedInfo() {
+            const detailedInfo = document.getElementById('detailed-info');
+            const detailButton = document.getElementById('detailButton');
+            
+            detailsVisible = !detailsVisible;
+            
+            if (detailsVisible) {
+                detailedInfo.style.display = 'grid';
+                detailButton.textContent = '📊 隐藏详情';
+            } else {
+                detailedInfo.style.display = 'none';
+                detailButton.textContent = '📊 详细信息';
+            }
+        }
+
+        // 优化的延迟检测和服务器状态检查
+        async function checkServerStatus() {
+            const statusElement = document.getElementById('server-status');
+            const playerCountElement = document.getElementById('player-count');
+            const pingElement = document.getElementById('ping');
+            const versionElement = document.getElementById('version');
+            const motdElement = document.getElementById('motd');
+            const playerListElement = document.getElementById('player-list');
+            const connectionDetails = document.getElementById('connection-details');
+            const refreshButton = document.getElementById('refreshButton');
+            const pingMethods = document.getElementById('ping-methods');
+            
+            // 详细信息元素
+            const protocolVersionElement = document.getElementById('protocol-version');
+            const serverSoftwareElement = document.getElementById('server-software');
+            const maxPlayersElement = document.getElementById('max-players');
+            const serverIconElement = document.getElementById('server-icon');
+            const lastUpdateElement = document.getElementById('last-update');
+            const uptimeElement = document.getElementById('uptime');
+            
+            // 延迟显示元素
+            const mainPing = document.getElementById('main-ping');
+            const connectionQuality = document.getElementById('connection-quality');
+            
+            // 禁用刷新按钮
+            refreshButton.disabled = true;
+            refreshButton.textContent = '🔄 检测中...';
+            
+            // 显示加载状态
+            statusElement.innerHTML = '<span class="loading">🔄 正在检测...</span>';
+            playerCountElement.textContent = '--/--';
+            pingElement.innerHTML = '<span class="loading">测试中...</span>';
+            motdElement.innerHTML = '正在获取服务器状态信息...';
+            playerListElement.innerHTML = '<div style="text-align: center; color: #81C784; padding: 20px;">🔄 正在获取玩家信息...</div>';
+            connectionDetails.innerHTML = '正在进行网络连接测试...';
+            
+            try {
+                const start = performance.now();
+                const response = await Promise.race([
+                    fetch(API_ENDPOINT, {
+                        method: 'GET',
+                        cache: 'no-cache'
+                    }),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Timeout')), 5000)
+                    )
+                ]);
+                const end = performance.now();
+                const responseTime = Math.round(end - start);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const pingQuality = getPingQuality(responseTime);
+                    
+                    // 检查服务器是否在线
+                    if (data.online || data.status === 'online') {
+                        // 服务器在线
+                        statusElement.innerHTML = '<span class="online">🟢 在线运行</span>';
+                        
+                        // 处理玩家数据
+                        const onlineCount = data.players || data.player_count || data.online_players || 0;
+                        const maxCount = data.max_players || data.player_max || '?';
+                        playerCountElement.innerHTML = `<span class="online">${onlineCount}/${maxCount}</span>`;
+                        if (maxPlayersElement) maxPlayersElement.textContent = maxCount;
+                        
+                        // 更新玩家历史数据
+                        updatePlayerHistory(onlineCount);
+                        
+                        pingElement.innerHTML = `<span class="${pingQuality.level}">${responseTime} ms</span>`;
+                        
+                        // 更新延迟历史数据
+                        updatePingHistory(responseTime);
+                        
+                        // 显示版本信息
+                        if (data.version) {
+                            versionElement.textContent = data.version;
+                            if (protocolVersionElement) protocolVersionElement.textContent = data.protocol || '未知';
+                        }
+                        
+                        // 显示软件信息
+                        if (serverSoftwareElement) serverSoftwareElement.textContent = data.software || 'Fabric Server';
+                        
+                        // 显示格式化的MOTD
+                        if (data.motd) {
+                            let motdHtml = '<strong style="color: #4CAF50;">📢 服务器信息:</strong><br>';
+                            motdHtml += parseMinecraftFormatting(data.motd);
+                            motdElement.innerHTML = motdHtml;
+                        } else {
+                            motdElement.innerHTML = '<strong style="color: #4CAF50;">📢 服务器信息:</strong><br><span style="color: #81C784;">欢迎来到 Fishp Server！正版验证服务器，期待你的加入！</span>';
+                        }
+                        
+                        // 显示服务器图标
+                        if (serverIconElement && data.icon) {
+                            serverIconElement.innerHTML = `<img src="${data.icon}" style="width: 32px; height: 32px; border-radius: 4px;">`;
+                        } else if (serverIconElement) {
+                            serverIconElement.textContent = '🎮';
+                        }
+                        
+                        // 显示更新时间
+                        if (lastUpdateElement) lastUpdateElement.textContent = new Date().toLocaleTimeString('zh-CN');
+                        
+                        // 显示运行时间
+                        if (uptimeElement) {
+                            uptimeElement.textContent = data.uptime || '未知';
+                        }
+                        
+                        // 显示玩家列表
+                        displayPlayerList(data.player_list || [], playerListElement, onlineCount);
+                        
+                        // 显示连接详情
+                        connectionDetails.innerHTML = `
+                            ✅ <strong>服务器在线</strong> - 连接正常<br>
+                            📍 服务器地址: ${SERVER_CONFIG.fullAddress}<br>
+                            ⚡ 网络延迟: ${responseTime}ms (${pingQuality.text})<br>
+                            🕒 检测时间: ${new Date().toLocaleTimeString('zh-CN')}<br>
+                            📊 <small>连接质量: ${pingQuality.text}</small>
+                        `;
+                        
+                        // 显示详细延迟信息
+                        pingMethods.style.display = 'grid';
+                        mainPing.textContent = `${responseTime}ms`;
+                        connectionQuality.innerHTML = `<span style="color: ${pingQuality.color};">${pingQuality.text}</span>`;
+                        
+                    } else {
+                        // 服务器离线
+                        throw new Error('Server offline');
+                    }
+                } else {
+                    throw new Error('API request failed');
+                }
+                
+            } catch (error) {
+                console.error('服务器状态检测失败:', error);
+                
+                // 服务器离线或无法连接
+                statusElement.innerHTML = '<span class="offline">🔴 服务器离线</span>';
+                playerCountElement.innerHTML = '<span class="offline">0/--</span>';
+                pingElement.innerHTML = '<span class="offline">无响应</span>';
+                motdElement.innerHTML = '<strong style="color: #F44336;">❌ 服务器状态:</strong><br>无法连接到服务器，可能服务器离线或网络问题。';
+                
+                playerListElement.innerHTML = `
+                    <h4 style="color: #F44336; margin-bottom: 15px; text-align: center;">🔴 服务器不可达</h4>
+                    <div style="text-align: center; color: #F44336; padding: 20px;">
+                        🛠️ 服务器当前无法连接<br>
+                        <small style="color: #FFAB91;">可能正在维护或网络问题，请稍后再试</small>
+                    </div>
+                `;
+                
+                connectionDetails.innerHTML = `
+                    ⚠️ <strong>连接失败</strong> - 无法连接到服务器<br>
+                    📍 目标地址: ${SERVER_CONFIG.fullAddress}<br>
+                    🕒 检测时间: ${new Date().toLocaleTimeString('zh-CN')}<br>
+                    💡 <small>建议：检查网络连接或联系服务器管理员</small>
+                `;
+                
+                pingMethods.style.display = 'none';
+            } finally {
+                // 重新启用刷新按钮
+                refreshButton.disabled = false;
+                refreshButton.textContent = '🔄 刷新状态';
+            }
+        }
+
+        // 显示玩家列表
+        function displayPlayerList(playerList, container, onlineCount) {
+            if (onlineCount > 0) {
+                container.innerHTML = '<h4 style="color: #4CAF50; margin-bottom: 15px; text-align: center;">🎮 当前在线玩家</h4>';
+                
+                if (playerList && playerList.length > 0) {
+                    playerList.forEach(playerName => {
+                        const playerDiv = document.createElement('div');
+                        playerDiv.className = 'player-item';
+                        
+                        playerDiv.innerHTML = `
+                            <img class="player-avatar" 
+                                 src="https://minotar.net/avatar/${encodeURIComponent(playerName)}/48" 
+                                 alt="${escapeHtml(playerName)}" 
+                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjMkU3RDMyIi8+CjxwYXRoIGQ9Ik0yNCAzNkMzMC42Mjc0IDM2IDM2IDMwLjYyNzQgMzYgMjRDMzYgMTcuMzcyNiAzMC42Mjc0IDEyIDI0IDEyQzE3LjM3MjYgMTIgMTIgMTcuMzcyNiAxMiAyNEMxMiAzMC42Mjc0IDE3LjM3MjYgMzYgMjQgMzZaIiBmaWxsPSIjNENBRjUwIi8+PC9wYXRoPjwvc3ZnPg=='">
+                            <div class="player-info">
+                                <div class="player-name">🎮 ${escapeHtml(playerName)}</div>
+                                <div class="player-uuid">🔒 UUID 已隐藏</div>
+                            </div>
+                        `;
+                        
+                        container.appendChild(playerDiv);
+                    });
+                } else {
+                    const noListDiv = document.createElement('div');
+                    noListDiv.className = 'player-item';
+                    noListDiv.style.textAlign = 'center';
+                    noListDiv.innerHTML = `
+                        <div style="width: 100%; color: #81C784;">
+                            🔒 当前有 ${onlineCount} 位玩家在线<br>
+                            <small style="color: #A5D6A7;">玩家列表已隐藏保护隐私</small>
+                        </div>
+                    `;
+                    container.appendChild(noListDiv);
+                }
+            } else {
+                container.innerHTML = `
+                    <h4 style="color: #4CAF50; margin-bottom: 15px; text-align: center;">🎮 当前在线玩家</h4>
+                    <div style="text-align: center; color: #81C784; padding: 20px;">
+                        😴 当前没有玩家在线<br>
+                        <small style="color: #A5D6A7;">快来成为第一个加入的玩家吧！</small>
+                    </div>
+                `;
+            }
+        }
+
+        // 复制服务器地址功能
+        function copyServerAddress() {
+            const address = SERVER_CONFIG.fullAddress;
+            const tooltip = document.getElementById('copyTooltip');
+            
+            navigator.clipboard.writeText(address).then(() => {
+                tooltip.textContent = "✅ 已复制！";
+                tooltip.classList.add('show');
+                
+                setTimeout(() => {
+                    tooltip.classList.remove('show');
+                    setTimeout(() => {
+                        tooltip.textContent = "点击复制地址";
+                    }, 300);
+                }, 2000);
+            }).catch(() => {
+                const textArea = document.createElement("textarea");
+                textArea.value = address;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                textArea.style.top = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    tooltip.textContent = "✅ 已复制！";
+                } catch (err) {
+                    tooltip.textContent = "❌ 复制失败";
+                }
+                
+                document.body.removeChild(textArea);
+                tooltip.classList.add('show');
+                
+                setTimeout(() => {
+                    tooltip.classList.remove('show');
+                    setTimeout(() => {
+                        tooltip.textContent = "点击复制地址";
+                    }, 300);
+                }, 2000);
+            });
+        }
+
+        // 更新延迟历史数据并刷新图表
+        function updatePingHistory(ping) {
+            const now = new Date();
+            pingHistory.push({
+                time: now.toLocaleTimeString('zh-CN'),
+                ping: ping
+            });
+            
+            // 保持最近20个数据点
+            if (pingHistory.length > 20) {
+                pingHistory.shift();
+            }
+            
+            if (pingChart) {
+                pingChart.data.labels = pingHistory.map(item => item.time);
+                pingChart.data.datasets[0].data = pingHistory.map(item => item.ping);
+                pingChart.update();
+            }
+        }
+
+        // 更新玩家历史数据并刷新图表
+        function updatePlayerHistory(playerCount) {
+            const now = new Date();
+            playerHistory.push({
+                time: now.toLocaleTimeString('zh-CN'),
+                count: playerCount
+            });
+            
+            // 保持最近20个数据点
+            if (playerHistory.length > 20) {
+                playerHistory.shift();
+            }
+            
+            if (playerChart) {
+                playerChart.data.labels = playerHistory.map(item => item.time);
+                playerChart.data.datasets[0].data = playerHistory.map(item => item.count);
+                playerChart.update();
+            }
+        }
+
+        // 初始化服务器状态图表
+        function initServerCharts() {
+            // 延迟监控图表
+            const pingCtx = document.getElementById('pingChart');
+            if (pingCtx) {
+                pingChart = new Chart(pingCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: '延迟 (ms)',
+                            data: [],
+                            borderColor: '#4CAF50',
+                            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#C8E6C9'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#81C784',
+                                    maxTicksLimit: 6
+                                },
+                                grid: {
+                                    color: 'rgba(129, 199, 132, 0.2)'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#81C784'
+                                },
+                                grid: {
+                                    color: 'rgba(129, 199, 132, 0.2)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 玩家在线趋势图表
+            const playerCtx = document.getElementById('playerChart');
+            if (playerCtx) {
+                playerChart = new Chart(playerCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: '在线玩家数',
+                            data: [],
+                            borderColor: '#2196F3',
+                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#C8E6C9'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#81C784',
+                                    maxTicksLimit: 6
+                                },
+                                grid: {
+                                    color: 'rgba(129, 199, 132, 0.2)'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#81C784',
+                                    stepSize: 1
+                                },
+                                grid: {
+                                    color: 'rgba(129, 199, 132, 0.2)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // 服务器地址悬停提示
+        function initAddressTooltip() {
+            const serverAddress = document.querySelector('.server-address');
+            const tooltip = document.getElementById('copyTooltip');
+            
+            if (serverAddress && tooltip) {
+                serverAddress.addEventListener('mouseenter', () => {
+                    if (!tooltip.classList.contains('show')) {
+                        tooltip.classList.add('show');
+                    }
+                });
+                
+                serverAddress.addEventListener('mouseleave', () => {
+                    if (tooltip.textContent === "点击复制地址") {
+                        tooltip.classList.remove('show');
+                    }
+                });
+            }
+        }
+
+        // 初始化所有功能
+        function init() {
+            initAddressTooltip();
+            initServerCharts();
+            
+            // 页面加载时检查服务器状态
+            checkServerStatus();
+            
+            // 每30秒自动刷新一次状态
+            setInterval(checkServerStatus, 30000);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
